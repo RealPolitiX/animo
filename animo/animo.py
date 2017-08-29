@@ -50,7 +50,8 @@ class LineAnimate(PlotAnimate):
         self.y = y
         self.nframes = nframes
         self.fixed = fixed
-        self.f, self.ax = plt.subplots(figsize=(6,4))
+        self.figsize = kwargs.get('figsize', (6,4))
+        self.f, self.ax = plt.subplots(figsize=self.figsize)
         self.interval = kwargs.get('interval', 100)
         
     def frame(self, iframe):
@@ -94,7 +95,8 @@ class ImageAnimate(PlotAnimate):
             self.axis = axis
             self.data = np.rollaxis(data, axis)
             _, self.nr, self.nc = self.data.shape
-            self.f, self.ax = plt.subplots(figsize=(5,6))
+            self.figsize = kwargs.get('figsize', (5,6))
+            self.f, self.ax = plt.subplots(figsize=self.figsize)
             self.interval = kwargs.get('interval', 100)
             self.nframes = kwargs.get('nframes', data.shape[axis])
             self.x = kwargs.get('x', range(self.nr))
