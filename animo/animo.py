@@ -53,9 +53,9 @@ class LineAnimate(PlotAnimate):
         self.fixed = fixed
         self.figsize = kwargs.get('figsize', (6,4))
         self.interval = kwargs.get('interval', 100)
-        try:
-            self.f, self.ax = kwargs.get('fig'), kwargs.get('ax')
-        except:
+        if {'fig', 'ax'} <= set(kwargs.keys()):
+            self.f, self.ax = kwargs['fig'], kwargs['ax']
+        else:
             self.f, self.ax = plt.subplots(figsize=self.figsize)
         
     def frame(self, iframe):
@@ -102,38 +102,40 @@ class ImageAnimate(PlotAnimate):
             self.axis = axis
             self.data = np.rollaxis(data, axis)
             _, self.nr, self.nc = self.data.shape
-            self.figsize = kwargs.get('figsize', (5,6))
-            self.f, self.ax = plt.subplots(figsize=self.figsize)
             self.interval = kwargs.get('interval', 100)
             self.nframes = kwargs.get('nframes', data.shape[axis])
             self.x = kwargs.get('x', range(self.nr))
             self.y = kwargs.get('y', range(self.nc))
+            self.figsize = kwargs.get('figsize', (5,6))
             self.xgrid, self.ygrid = np.meshgrid(self.y, self.x)
             self.cmap = kwargs.get('cmap', 'terrain_r')
             self.vmin = kwargs.get('vmin', None)
             self.vmax = kwargs.get('vmax', None)
-            self.cmesh = 0
-            self.anim = 0
+            if {'fig', 'ax'} <= set(kwargs.keys()):
+                self.f, self.ax = kwargs['fig'], kwargs['ax']
+            else:
+                self.f, self.ax = plt.subplots(figsize=self.figsize)
     
     def frame(self, iframe):
         imgframe = self.data[iframe,:,:]
-        self.cmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, np.flipud(imgframe), \
+        self.qmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, np.flipud(imgframe), \
               cmap=self.cmap, vmin=self.vmin, vmax=self.vmax)
-        return self.f, self.cmesh
+        return self.f, self.qmesh
         
     def view_frame(self, iframe):
         _ = self.frame(iframe)
         return
         
-    def animator(self):
-        self.cmesh = self.frame(0)[1]
-        def animate(iframe):
+    def animator(self, iframe):
+        if not hasattr(self, 'qmesh'):
+            self.qmesh = self.frame(0)[1]
+        else:
             imgcurr = np.flipud(self.data[iframe,:,:])
-            self.cmesh.set_array(imgcurr[:-1,:-1].flatten())
-        self.anim = animation.FuncAnimation(self.f, animate,\
-               frames=self.nframes, interval=self.interval)
-        return self.anim
+            self.qmesh.set_array(imgcurr[:-1,:-1].flatten())
+        return self.f
     
     def view_anim(self, backend):
+        self.anim = animation.FuncAnimation(self.f, self.animator,\
+               frames=self.nframes, interval=self.interval)
         if backend == 'JS':
-            return display_animation(self.animator())
+            return display_animation(self.anim)
