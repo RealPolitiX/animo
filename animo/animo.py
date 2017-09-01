@@ -52,8 +52,11 @@ class LineAnimate(PlotAnimate):
         self.nframes = nframes
         self.fixed = fixed
         self.figsize = kwargs.get('figsize', (6,4))
-        self.f, self.ax = plt.subplots(figsize=self.figsize)
         self.interval = kwargs.get('interval', 100)
+        try:
+            self.f, self.ax = kwargs.get('fig'), kwargs.get('ax')
+        except:
+            self.f, self.ax = plt.subplots(figsize=self.figsize)
         
     def frame(self, iframe):
         if self.fixed == 'x':
@@ -69,12 +72,15 @@ class LineAnimate(PlotAnimate):
         return
         
     def animator(self, iframe):
-        if self.fixed == 'x':
-            self.lines.set_data(self.x, self.y[iframe,:])
-        elif self.fixed == 'y':
-            self.lines.set_data(self.x[iframe,:], self.y)
-        elif self.fixed is None:
-            self.lines.set_data(self.x[iframe,:], self.y[iframe,:])
+        if not hasattr(self, 'lines'):
+            self.lines = self.frame(0)
+        else:
+            if self.fixed == 'x':
+                self.lines.set_data(self.x, self.y[iframe,:])
+            elif self.fixed == 'y':
+                self.lines.set_data(self.x[iframe,:], self.y)
+            elif self.fixed is None:
+                self.lines.set_data(self.x[iframe,:], self.y[iframe,:])
         return self.f
     
     def view_anim(self, backend):
