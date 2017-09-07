@@ -2,34 +2,44 @@
 OOP-style custom animations for IPython using matplotlib and JSAnimation
 
 
-#### Install animo  
+### Install animo  
 ```
 pip install git+https://github.com/RealPolitiX/animo.git
 ```
 
 
-#### Explanation of simple use cases
+### A quick guide to simple use cases
 ```
 from animo import LineAnimate, ImageAnimate
+```  
+1. Animation of line series  
+(1) Construct the animation
 ```
-1. Construct animation of line series
-```anm = LineAnimate(x, y, nframes, fixed='x')```
+anm = LineAnimate(x, y, nframes, fixed='x')
+```  
+(2) To view a single frame,
+```
+anm.view_frame(frame_number)
+```  
+(3) To view the whole animation,
+```
+anm.view_anim(backend='JS')
+```
 
-to view a single frame,
-```anm.view_frame(frame_number)```
 
-to view the whole animation,
-```anm.view_anim(backend='JS')```
-
-
-2. Construct animation of image series
-```anm = ImageAnimate(data, axis=0)```
-
-to view a single frame,
-```anm.view_frame(frame_number)
-
-to view the whole animation,
-```anm.view_anim(backend='JS')```
+2. Animation of image series  
+(1) Construct the animation
+```
+anm = ImageAnimate(data, axis=0)
+```  
+(2) To view a single frame,
+```
+anm.view_frame(frame_number)
+```  
+(3) To view the whole animation,
+```
+anm.view_anim(backend='JS')
+```
 
 
 3. Construct a composite animation (with both lines and images)
