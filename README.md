@@ -12,7 +12,7 @@ pip install git+https://github.com/RealPolitiX/animo.git
 ```
 from animo import LineAnimate, ImageAnimate
 ```  
-1. Animation of line series  
+##### Animation of line series  
 (1) Construct the animation
 ```
 anm = LineAnimate(x, y, nframes, fixed='x')
@@ -27,7 +27,7 @@ anm.view_anim(backend='JS')
 ```
 
 
-2. Animation of image series  
+##### Animation of image series  
 (1) Construct the animation
 ```
 anm = ImageAnimate(data, axis=0)
@@ -42,4 +42,11 @@ anm.view_anim(backend='JS')
 ```
 
 
-3. Construct a composite animation (with both lines and images)
+##### Animation with mixed static and dynamic components  
+(1) Construct the static figure  
+(2) Pass the figure and axes handle to an instance of an animator class (such as LineAnimate or ImageAnimate) upon instantiation
+(3) Execute animation command as explained before
+
+
+##### Animate both lines and images  
+Use the CompositePlotAnimate class in a similar way as LineAnimate and ImageAnimate

@@ -53,6 +53,7 @@ class LineAnimate(PlotAnimate):
         self.fixed = fixed
         self.figsize = kwargs.get('figsize', (6,4))
         self.interval = kwargs.get('interval', 100)
+        self.zorder = kwargs.get('zorder', 0)
         if {'fig', 'ax'} <= set(kwargs.keys()):
             self.f, self.ax = kwargs['fig'], kwargs['ax']
         else:
@@ -60,11 +61,11 @@ class LineAnimate(PlotAnimate):
         
     def frame(self, iframe):
         if self.fixed == 'x':
-            self.lines, = self.ax.plot(self.x[0,:], self.y[iframe,:])
+            self.lines, = self.ax.plot(self.x[0,:], self.y[iframe,:], zorder=self.zorder)
         elif self.fixed == 'y':
-            self.lines, = self.ax.plot(self.x[iframe,:], self.y[0,:])
+            self.lines, = self.ax.plot(self.x[iframe,:], self.y[0,:], zorder=self.zorder)
         elif self.fixed is None:
-            self.lines, = self.ax.plot(self.x[iframe,:], self.y[iframe,:])
+            self.lines, = self.ax.plot(self.x[iframe,:], self.y[iframe,:], zorder=self.zorder)
         return self.lines
     
     def view_frame(self, iframe):
@@ -104,13 +105,14 @@ class ImageAnimate(PlotAnimate):
             _, self.nr, self.nc = self.data.shape
             self.interval = kwargs.get('interval', 100)
             self.nframes = kwargs.get('nframes', data.shape[axis])
-            self.x = kwargs.get('x', range(self.nr))
-            self.y = kwargs.get('y', range(self.nc))
+            self.xaxis = kwargs.get('imx', range(self.nr))
+            self.yaxis = kwargs.get('imy', range(self.nc))
             self.figsize = kwargs.get('figsize', (5,6))
-            self.xgrid, self.ygrid = np.meshgrid(self.y, self.x)
+            self.xgrid, self.ygrid = np.meshgrid(self.yaxis, self.xaxis)
             self.cmap = kwargs.get('cmap', 'terrain_r')
             self.vmin = kwargs.get('vmin', None)
             self.vmax = kwargs.get('vmax', None)
+            self.zorder = kwargs.get('zorder', 0)
             if {'fig', 'ax'} <= set(kwargs.keys()):
                 self.f, self.ax = kwargs['fig'], kwargs['ax']
             else:
@@ -119,7 +121,7 @@ class ImageAnimate(PlotAnimate):
     def frame(self, iframe):
         imgframe = self.data[iframe,:,:]
         self.qmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, np.flipud(imgframe), \
-              cmap=self.cmap, vmin=self.vmin, vmax=self.vmax)
+              cmap=self.cmap, vmin=self.vmin, vmax=self.vmax, zorder=self.zorder)
         return self.f, self.qmesh
         
     def view_frame(self, iframe):
@@ -132,6 +134,47 @@ class ImageAnimate(PlotAnimate):
         else:
             imgcurr = np.flipud(self.data[iframe,:,:])
             self.qmesh.set_array(imgcurr[:-1,:-1].flatten())
+        return self.f
+    
+    def view_anim(self, backend):
+        self.anim = animation.FuncAnimation(self.f, self.animator,\
+               frames=self.nframes, interval=self.interval)
+        if backend == 'JS':
+            return display_animation(self.anim)
+
+            
+class CompositePlotAnimate(LineAnimate, ImageAnimate):
+    """
+    Class for composite image and line animation
+    """
+    
+    def __init__(self, x, y, data, fixed='x', axis=0, **kwargs):
+        
+        # Construct figure and axes objects
+        self.figsize = kwargs.get('figsize', (5,6))
+        if {'fig', 'ax'} <= set(kwargs.keys()):
+            self.f, self.ax = kwargs['fig'], kwargs['ax']
+        else:
+            self.f, self.ax = plt.subplots(figsize=self.figsize)
+        
+        # Initiate animation with existing figure and axes handles
+        ImageAnimate.__init__(self, data, axis=axis, fig=self.f, \
+                ax=self.ax, figsize=self.figsize, zorder=0, **kwargs)
+        LineAnimate.__init__(self, x, y, self.nframes, fixed=fixed, \
+                fig=self.f, ax=self.ax, figsize=self.figsize, zorder=1, **kwargs)
+    
+    def frame(self, iframe):
+        self.lines = LineAnimate.frame(self, iframe)
+        self.qmesh = ImageAnimate.frame(self, iframe)[1]
+        return self.lines, self.qmesh
+    
+    def view_frame(self, iframe):
+        _ = self.frame(iframe)
+        return
+    
+    def animator(self, iframe):
+        LineAnimate.animator(self, iframe)
+        ImageAnimate.animator(self, iframe)
         return self.f
     
     def view_anim(self, backend):
