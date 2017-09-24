@@ -104,9 +104,13 @@ class ImageAnimate(PlotAnimate):
             self.data = np.rollaxis(data, axis)
             self.nl, self.nr, self.nc = self.data.shape
             self.interval = kwargs.get('interval', 100)
+            self.colorbar = kwargs.get('colorbar', 'False')
             self.nframes = kwargs.get('nframes', data.shape[axis])
             self.xaxis = kwargs.get('imx', range(self.nr))
             self.yaxis = kwargs.get('imy', range(self.nc))
+            self.xlabel = kwargs.get('xlabel', '')
+            self.ylabel = kwargs.get('ylabel', '')
+            self.axlabelsize = kwargs.get('axlabelsize', 15)
             self.figsize = kwargs.get('figsize', (5,6))
             self.xgrid, self.ygrid = np.meshgrid(self.yaxis, self.xaxis)
             self.cmap = kwargs.get('cmap', 'terrain_r')
@@ -121,6 +125,8 @@ class ImageAnimate(PlotAnimate):
                 self.f, self.ax = kwargs['fig'], kwargs['ax']
             else:
                 self.f, self.ax = plt.subplots(figsize=self.figsize)
+            self.ax.set_xlabel(self.xlabel, fontsize=self.axlabelsize)
+            self.ax.set_ylabel(self.ylabel, fontsize=self.axlabelsize)
     
     def frame(self, iframe):
         imgframe = self.data[iframe,:,:]
@@ -129,6 +135,8 @@ class ImageAnimate(PlotAnimate):
         self.txt = self.ax.text(self.textpos[0], self.textpos[1], self.text[iframe], \
                      fontsize=self.textsize, color=self.textcolor, \
                      zorder=1, transform=self.ax.transAxes)
+        if self.colorbar == 'True':
+            self.f.colorbar(self.qmesh)
         return self.f, self.qmesh
         
     def view_frame(self, iframe):
