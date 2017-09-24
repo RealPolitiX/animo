@@ -102,7 +102,7 @@ class ImageAnimate(PlotAnimate):
         else:
             self.axis = axis
             self.data = np.rollaxis(data, axis)
-            _, self.nr, self.nc = self.data.shape
+            self.nl, self.nr, self.nc = self.data.shape
             self.interval = kwargs.get('interval', 100)
             self.nframes = kwargs.get('nframes', data.shape[axis])
             self.xaxis = kwargs.get('imx', range(self.nr))
@@ -110,6 +110,10 @@ class ImageAnimate(PlotAnimate):
             self.figsize = kwargs.get('figsize', (5,6))
             self.xgrid, self.ygrid = np.meshgrid(self.yaxis, self.xaxis)
             self.cmap = kwargs.get('cmap', 'terrain_r')
+            self.text = kwargs.get('text', ['']*self.nl)
+            self.textpos = kwargs.get('textpos', (0.9, 0.9))
+            self.textsize = kwargs.get('textsize', 15)
+            self.textcolor = kwargs.get('textcolor', 'k')
             self.vmin = kwargs.get('vmin', None)
             self.vmax = kwargs.get('vmax', None)
             self.zorder = kwargs.get('zorder', 0)
@@ -122,6 +126,9 @@ class ImageAnimate(PlotAnimate):
         imgframe = self.data[iframe,:,:]
         self.qmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, np.flipud(imgframe), \
               cmap=self.cmap, vmin=self.vmin, vmax=self.vmax, zorder=self.zorder)
+        self.txt = self.ax.text(self.textpos[0], self.textpos[1], self.text[iframe], \
+                     fontsize=self.textsize, color=self.textcolor, \
+                     zorder=1, transform=self.ax.transAxes)
         return self.f, self.qmesh
         
     def view_frame(self, iframe):
@@ -134,6 +141,7 @@ class ImageAnimate(PlotAnimate):
         else:
             imgcurr = np.flipud(self.data[iframe,:,:])
             self.qmesh.set_array(imgcurr[:-1,:-1].flatten())
+            self.txt.set_text(self.text[iframe])
         return self.f
     
     def view_anim(self, backend):
