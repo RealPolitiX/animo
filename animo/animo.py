@@ -10,7 +10,40 @@ from JSAnimation.IPython_display import display_animation
 from matplotlib import animation
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+import matplotlib.colors as colors
 
+
+# ===== Utility functions ===== #
+
+class MidpointNormalize(colors.Normalize):
+
+    def __init__(self, vmin=None, vmax=None, midpoint=None, clip=False):
+        self.midpoint = midpoint
+        colors.Normalize.__init__(self, vmin, vmax, clip)
+
+    def __call__(self, value, clip=None):
+        x, y = [self.vmin, self.midpoint, self.vmax], [0, 0.5, 1]
+        return np.ma.masked_array(np.interp(value, x, y))
+
+
+def parse_norm(data, cscale):
+    """
+    Parser of string for color normalization
+    """
+    if isinstance(cscale, str):
+        if cscale == 'log':  # log scale
+            return mpl.colors.LogNorm()
+        elif cscale == 'linear':  # linear scale (default)
+            return mpl.colors.Normalize()
+    elif isinstance(cscale, dict):
+        mp = cscale.pop('midpoint', 0.)
+        cvmin = cscale.pop('vmin', np.min(data))
+        cvmax = cscale.pop('vmax', np.max(data))
+        return MidpointNormalize(vmin=cvmin, vmax=cvmax, midpoint=mp)
+
+
+# ===== Animator classes ===== #
 
 class PlotAnimate(object):
     """
@@ -105,6 +138,7 @@ class ImageAnimate(PlotAnimate):
             self.nl, self.nr, self.nc = self.data.shape
             self.interval = kwargs.get('interval', 100)
             self.colorbar = kwargs.get('colorbar', False)
+            self.cscale = kwargs.get('cscale', 'linear')
             self.nframes = kwargs.get('nframes', data.shape[axis])
             self.xaxis = kwargs.get('imx', range(self.nc))
             self.yaxis = kwargs.get('imy', range(self.nr))
@@ -132,6 +166,7 @@ class ImageAnimate(PlotAnimate):
         imgframe = self.data[iframe,:,:]
         self.qmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, np.flipud(imgframe), \
               cmap=self.cmap, vmin=self.vmin, vmax=self.vmax, zorder=self.zorder)
+        self.qmesh.set_norm(parse_norm(imgframe, self.cscale))
         self.txt = self.ax.text(self.textpos[0], self.textpos[1], self.text[iframe], \
                      fontsize=self.textsize, color=self.textcolor, \
                      zorder=1, transform=self.ax.transAxes)
@@ -147,7 +182,7 @@ class ImageAnimate(PlotAnimate):
         if not hasattr(self, 'qmesh'):
             self.qmesh = self.frame(0)[1]
         else:
-            imgcurr = np.flipud(self.data[iframe,:,:])
+            imgcurr = self.data[iframe,:,:]
             self.qmesh.set_array(imgcurr[:-1,:-1].flatten())
             self.txt.set_text(self.text[iframe])
         return self.f
