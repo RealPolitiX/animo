@@ -117,11 +117,13 @@ class LineAnimate(PlotAnimate):
                 self.lines.set_data(self.x[iframe,:], self.y[iframe,:])
         return self.f
     
-    def view_anim(self, backend):
+    def view_anim(self, backend=None):
         anim = animation.FuncAnimation(self.f, self.animator,\
                 frames=self.nframes, interval=self.interval)
         if backend == 'JS':
             return display_animation(anim)
+        elif backend is None:
+            return self.anim
             
 
 class ImageAnimate(PlotAnimate):
@@ -187,11 +189,13 @@ class ImageAnimate(PlotAnimate):
             self.txt.set_text(self.text[iframe])
         return self.f
     
-    def view_anim(self, backend):
+    def view_anim(self, backend=None):
         self.anim = animation.FuncAnimation(self.f, self.animator,\
                frames=self.nframes, interval=self.interval)
         if backend == 'JS':
             return display_animation(self.anim)
+        elif backend is None:
+            return self.anim
 
             
 class CompositePlotAnimate(LineAnimate, ImageAnimate):
@@ -228,8 +232,10 @@ class CompositePlotAnimate(LineAnimate, ImageAnimate):
         ImageAnimate.animator(self, iframe)
         return self.f
     
-    def view_anim(self, backend):
+    def view_anim(self, backend=None):
         self.anim = animation.FuncAnimation(self.f, self.animator,\
                frames=self.nframes, interval=self.interval)
         if backend == 'JS':
             return display_animation(self.anim)
+        elif backend is None:
+            return self.anim
