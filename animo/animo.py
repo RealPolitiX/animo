@@ -166,7 +166,7 @@ class ImageAnimate(PlotAnimate):
     
     def frame(self, iframe):
         imgframe = self.data[iframe,:,:]
-        self.qmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, np.flipud(imgframe), \
+        self.qmesh = self.ax.pcolormesh(self.xgrid, self.ygrid, imgframe, \
               cmap=self.cmap, vmin=self.vmin, vmax=self.vmax, zorder=self.zorder)
         self.qmesh.set_norm(parse_norm(imgframe, self.cscale))
         self.txt = self.ax.text(self.textpos[0], self.textpos[1], self.text[iframe], \
@@ -192,6 +192,46 @@ class ImageAnimate(PlotAnimate):
     def view_anim(self, backend=None):
         self.anim = animation.FuncAnimation(self.f, self.animator,\
                frames=self.nframes, interval=self.interval)
+        if backend == 'JS':
+            return display_animation(self.anim)
+        elif backend is None:
+            return self.anim
+
+
+class MultiImageAnimate(ImageAnimate):
+    """
+    Create connected multi-image animation
+    """
+    
+    def __init__(self, *dataset, axis=0, nrow=1, ncol=2, figsize=(12, 4), **kwargs):
+        self.f, axs = plt.subplots(nrow, ncol, figsize=figsize)
+        if np.ndim(axs) > 1:
+            self.axs = axs.flatten()
+        else:
+            self.axs = axs
+        self.dataset = dataset
+        self.dscount = len(dataset)
+        self.inst = []
+        for i in range(self.dscount):
+            self.inst.append(ImageAnimate(dataset[i], axis=axis, \
+                            fig=self.f, ax=self.axs[i], **kwargs))
+    
+    def frame(self, iframe):
+        for i in range(self.dscount):
+            self.inst[i].frame(iframe)
+        
+    def view_frame(self, iframe):
+        _ = self.frame(iframe)
+        return
+    
+    def animator(self, iframe):
+        for i in range(self.dscount):
+            self.inst[i].animator(iframe)
+        return self.f
+    
+    def view_anim(self, backend):
+        self.anim = animation.FuncAnimation(self.f, self.animator,\
+               frames=self.inst[0].nframes, interval=self.inst[0].interval)
         if backend == 'JS':
             return display_animation(self.anim)
         elif backend is None:
