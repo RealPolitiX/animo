@@ -163,6 +163,9 @@ class ImageAnimate(PlotAnimate):
                 self.f, self.ax = plt.subplots(figsize=self.figsize)
             self.ax.set_xlabel(self.xlabel, fontsize=self.axlabelsize)
             self.ax.set_ylabel(self.ylabel, fontsize=self.axlabelsize)
+            
+    def set_param(self, prop_statement):
+        exec("self." + prop_statement)
     
     def frame(self, iframe):
         imgframe = self.data[iframe,:,:]
@@ -215,6 +218,9 @@ class MultiImageAnimate(ImageAnimate):
         for i in range(self.dscount):
             self.inst.append(ImageAnimate(dataset[i], axis=axis, \
                             fig=self.f, ax=self.axs[i], **kwargs))
+
+    def set_param(self, n_inst, prop_statement):
+        exec("self.inst[n_inst]." + prop_statement)
     
     def frame(self, iframe):
         for i in range(self.dscount):
