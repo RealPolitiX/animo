@@ -144,6 +144,53 @@ class LineAnimate(PlotAnimate):
             return self.anim
             
 
+class MultiLineAnimate(LineAnimate):
+    """
+    Create multiline animation
+    """
+    
+    def __init__(self, dataset, fixed, nframes, figsize=(6,4), **kwargs):
+        self.f, self.ax = plt.subplots(figsize=figsize)
+        self.dataset = dataset
+        self.dscount = len(dataset)
+        self.nframes = nframes
+        self.labels = kwargs.get('labels', ['']*self.dscount)
+        self.linewidths = kwargs.get('linewidths', [2]*self.dscount)
+        self.linestyles = kwargs.get('linestyles', ['-']*self.dscount)
+        self.linecolors = kwargs.get('linecolors', ['k']*self.dscount)
+        self.zorders = kwargs.get('zorders', range(self.dscount))
+        self.inst = []
+        for i in range(self.dscount):
+            self.inst.append(LineAnimate(*dataset[i], fixed=fixed, nframes=nframes,\
+                fig=self.f, ax=self.ax, linewidth=self.linewidths[i], linecolor=self.linecolors[i], \
+                linestyle=self.linestyles[i], label=self.labels[i], zorder=self.zorders[i], **kwargs))
+
+    def set_inst_param(self, n_inst, prop_statement):
+        exec("self.inst[n_inst]." + prop_statement)
+
+    def frame(self, iframe):
+        for i in range(self.dscount):
+            self.inst[i].frame(iframe)
+        return
+    
+    def view_frame(self, iframe):
+        _ = self.frame(iframe)
+        return
+    
+    def animator(self, iframe):
+        for i in range(self.dscount):
+            self.inst[i].animator(iframe)
+        return self.f
+    
+    def view_anim(self, backend=None):
+        anim = animation.FuncAnimation(self.f, self.animator,\
+                frames=self.nframes, interval=self.inst[0].interval)
+        if backend == 'JS':
+            return display_animation(anim)
+        elif backend is None:
+            return self.anim
+            
+
 class ImageAnimate(PlotAnimate):
     """
     Class for 2D image animation
@@ -224,7 +271,7 @@ class MultiImageAnimate(ImageAnimate):
     Create connected multi-image animation
     """
     
-    def __init__(self, *dataset, axis=0, nrow=1, ncol=2, figsize=(12, 4), **kwargs):
+    def __init__(self, dataset, axis=0, nrow=1, ncol=2, figsize=(12, 4), **kwargs):
         self.f, axs = plt.subplots(nrow, ncol, figsize=figsize)
         if np.ndim(axs) > 1:
             self.axs = axs.flatten()
