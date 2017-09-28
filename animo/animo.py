@@ -87,18 +87,36 @@ class LineAnimate(PlotAnimate):
         self.figsize = kwargs.get('figsize', (6,4))
         self.interval = kwargs.get('interval', 100)
         self.zorder = kwargs.get('zorder', 0)
+        self.label = kwargs.get('label', '')
+        self.legend = kwargs.get('legend', False)
+        self.lgdloc = kwargs.get('legendloc', 'upper right')
+        self.lgdttl = kwargs.get('legendtitle', '')
+        self.linewidth = kwargs.get('linewidth', 2)
+        self.linecolor = kwargs.get('linecolor', 'k')
+        self.linestyle = kwargs.get('linestyle', '-')
         if {'fig', 'ax'} <= set(kwargs.keys()):
             self.f, self.ax = kwargs['fig'], kwargs['ax']
         else:
             self.f, self.ax = plt.subplots(figsize=self.figsize)
-        
+
+    def set_param(self, prop_statement):
+        exec("self." + prop_statement)
+
     def frame(self, iframe):
         if self.fixed == 'x':
-            self.lines, = self.ax.plot(self.x[0,:], self.y[iframe,:], zorder=self.zorder)
+            self.lines, = self.ax.plot(self.x[0,:], self.y[iframe,:], linewidth=self.linewidth, \
+                        color=self.linecolor, linestyle=self.linestyle, label=self.label, \
+                        zorder=self.zorder)
         elif self.fixed == 'y':
-            self.lines, = self.ax.plot(self.x[iframe,:], self.y[0,:], zorder=self.zorder)
+            self.lines, = self.ax.plot(self.x[iframe,:], self.y[0,:], linewidth=self.linewidth, \
+                        color=self.linecolor, linestyle=self.linestyle, label=self.label, \
+                        zorder=self.zorder)
         elif self.fixed is None:
-            self.lines, = self.ax.plot(self.x[iframe,:], self.y[iframe,:], zorder=self.zorder)
+            self.lines, = self.ax.plot(self.x[iframe,:], self.y[iframe,:], linewidth=self.linewidth, \
+                        color=self.linecolor, linestyle=self.linestyle, label=self.label, \
+                        zorder=self.zorder)
+        if self.legend == True:
+            self.ax.legend(title=self.lgdttl, loc=self.lgdloc)
         return self.lines
     
     def view_frame(self, iframe):
@@ -219,7 +237,7 @@ class MultiImageAnimate(ImageAnimate):
             self.inst.append(ImageAnimate(dataset[i], axis=axis, \
                             fig=self.f, ax=self.axs[i], **kwargs))
 
-    def set_param(self, n_inst, prop_statement):
+    def set_inst_param(self, n_inst, prop_statement):
         exec("self.inst[n_inst]." + prop_statement)
     
     def frame(self, iframe):
